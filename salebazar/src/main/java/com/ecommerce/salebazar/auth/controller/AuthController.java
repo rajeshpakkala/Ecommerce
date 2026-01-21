@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;//
 
 @RestController
-@RequestMapping("salebazar/auth")
+@RequestMapping("/salebazar/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
@@ -45,6 +45,16 @@ public class AuthController {
 
         return ResponseEntity.ok(authService.login(request));
     }
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponseDTO<LogoutResponseDTO>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody(required = false) LogoutRequestDTO request) {
+
+        log.info(" LOGOUT API HIT");
+
+        return ResponseEntity.ok(authService.logout(authHeader, request));
+    }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register/admin")

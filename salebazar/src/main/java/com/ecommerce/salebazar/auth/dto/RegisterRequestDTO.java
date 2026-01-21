@@ -5,10 +5,10 @@ import lombok.Data;
 @Data
 public class RegisterRequestDTO {
 
-    private String email;
-
-    private String password;
-
+    private final String name;
+    private final String mobileNumber;
+    private final String email;
+    private final String password;
     // For vendor
     private String businessName;
 }

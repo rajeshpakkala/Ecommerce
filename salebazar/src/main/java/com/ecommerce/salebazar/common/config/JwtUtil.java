@@ -52,4 +52,7 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+    public Date extractExpiration(String token) {
+        return getClaims(token).getExpiration();
+    }
 }

@@ -1,6 +1,8 @@
 package com.ecommerce.salebazar.auth.service;
 
 import com.ecommerce.salebazar.auth.dto.*;
+import com.ecommerce.salebazar.auth.entity.BlacklistedToken;
+import com.ecommerce.salebazar.auth.repository.BlacklistedTokenRepository;
 import com.ecommerce.salebazar.common.config.JwtUtil;
 import com.ecommerce.salebazar.common.dto.AuthResponseDTO;
 import com.ecommerce.salebazar.exception.*;
@@ -8,12 +10,13 @@ import com.ecommerce.salebazar.user.entity.*;
 import com.ecommerce.salebazar.user.enums.RoleName;
 import com.ecommerce.salebazar.user.repository.*;
 import com.ecommerce.salebazar.vendor.entity.Vendor;
+import com.ecommerce.salebazar.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final VendorRepository vendorRepository;
     private final JwtUtil jwtUtil;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
 //    private final EmailService emailService;
 //    private final VerificationTokenService tokenService;
 
@@ -191,10 +195,10 @@ public class AuthService {
 
         log.info("User found: {}", user.getEmail());
 
-        if (!user.isEnabled()) {
-            log.error("User account not enabled");
-            throw new UnauthorizedException("Account not activated");
-        }
+//        if (!user.isEnabled()) {
+//            log.error("User account not enabled");
+//            throw new UnauthorizedException("Account not activated");
+//        }
 
         log.info("Checking password");
 
@@ -229,6 +233,44 @@ public class AuthService {
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
+
+    public AuthResponseDTO<LogoutResponseDTO> logout(
+            String authHeader,
+            LogoutRequestDTO request) {
+
+        log.info("➡️ Processing logout");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("Authorization token missing");
+        }
+
+        String token = authHeader.substring(7);
+
+        if (blacklistedTokenRepository.existsByToken(token)) {
+            throw new ConflictException("Token already logged out");
+        }
+
+        Date expiry = jwtUtil.extractExpiration(token);
+
+        BlacklistedToken blacklistedToken = BlacklistedToken.builder()
+                .token(token)
+                .expiresAt(expiry.toInstant())
+                .build();
+
+        blacklistedTokenRepository.save(blacklistedToken);
+
+        log.info("✅ Token blacklisted successfully");
+
+        return AuthResponseDTO.<LogoutResponseDTO>builder()
+                .status(true)
+                .responseCode(200)
+                .message("Logout successful")
+                .data(LogoutResponseDTO.builder()
+                        .loggedOut(true)
+                        .build())
+                .build();
+    }
+
 
 }
 

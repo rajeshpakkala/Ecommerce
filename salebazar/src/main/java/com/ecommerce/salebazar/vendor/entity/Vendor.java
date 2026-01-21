@@ -20,6 +20,7 @@ public class Vendor {
     private boolean approved;
 
     @OneToOne
+    @JoinColumn(name = "user_id")
     private User user;
 }
 

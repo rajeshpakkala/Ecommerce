@@ -1,5 +1,6 @@
 package com.ecommerce.salebazar.common.config;
 
+import com.ecommerce.salebazar.auth.repository.BlacklistedTokenRepository;
 import com.ecommerce.salebazar.common.utils.CustomUserDetailsService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
@@ -18,6 +19,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
 
     @Override
     protected void doFilterInternal(
@@ -28,8 +30,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        // ✅ No header → continue
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = authHeader.substring(7);
+
+        // ✅ Empty token → continue
+        if (token.isBlank()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            if (blacklistedTokenRepository.existsByToken(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            // ✅ FIRST validate token
+            if (!jwtUtil.validateToken(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // ✅ THEN extract username
             String username = jwtUtil.extractUsername(token);
 
             if (username != null &&
@@ -38,18 +64,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtil.validateToken(token)) {
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
             }
+
+        } catch (Exception ex) {
+            // ✅ NEVER crash the filter chain
+            System.out.println("JWT error: " + ex.getMessage());
         }
+
         filterChain.doFilter(request, response);
     }
 }
-
