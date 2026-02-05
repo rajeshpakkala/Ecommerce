@@ -5,6 +5,7 @@ import com.ecommerce.salebazar.common.dto.*;
 import com.ecommerce.salebazar.exception.NotFoundException;
 import com.ecommerce.salebazar.vendor.dto.*;
 import com.ecommerce.salebazar.vendor.entity.Vendor;
+import com.ecommerce.salebazar.vendor.enums.VendorStatus;
 import com.ecommerce.salebazar.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +73,8 @@ public class AdminVendorService {
             log.warn("Vendor already approved: {}", vendorId);
         }
 
-        vendor.setApproved(true);
+        vendor.setVendorStatus(VendorStatus.APPROVED);
+        vendor.setRejectionReason(null);
         vendorRepository.save(vendor);
 
         log.info("Vendor approved successfully: {}", vendorId);
@@ -85,6 +87,38 @@ public class AdminVendorService {
                         .vendorId(vendor.getId())
                         .approved(true)
                         .message("Vendor account activated")
+                        .build())
+                .build();
+    }
+
+    public AuthResponseDTO<RejectVendorResponseDTO> rejectVendor(Long vendorId) {
+
+        log.info("Rejecting vendor with ID: {}", vendorId);
+
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> {
+                    log.error("Vendor not found: {}", vendorId);
+                    return new NotFoundException("Vendor not found");
+                });
+
+        if (!vendor.isApproved()) {
+            log.warn("Vendor already rejected or not approved: {}", vendorId);
+        }
+
+       vendor.setVendorStatus(VendorStatus.REJECTED);
+        vendor.setRejectionReason("Documents not verified");
+        vendorRepository.save(vendor);
+
+        log.info("Vendor rejected successfully: {}", vendorId);
+
+        return AuthResponseDTO.<RejectVendorResponseDTO>builder()
+                .status(true)
+                .responseCode(200)
+                .message("Vendor rejected successfully")
+                .data(RejectVendorResponseDTO.builder()
+                        .vendorId(vendor.getId())
+                        .approved(false)
+                        .message("Vendor account rejected")
                         .build())
                 .build();
     }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;//
 
 @RestController
@@ -42,7 +43,11 @@ public class AuthController {
         log.info(" LOGIN API HIT");
         log.info(" Request received: email={}",
                 request != null ? request.getEmail() : "NULL");
+        log.info("AUTH = {}",
+                SecurityContextHolder.getContext().getAuthentication());
 
+        log.info("AUTHORITIES = {}",
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         return ResponseEntity.ok(authService.login(request));
     }
     @PostMapping("/logout")
@@ -60,6 +65,11 @@ public class AuthController {
     @PostMapping("/register/admin")
     public ResponseEntity<AuthResponseDTO<RegisterResponseDTO>> registerAdmin(
         @RequestBody RegisterRequestDTO request) {
+        log.info("AUTH = {}",
+                SecurityContextHolder.getContext().getAuthentication());
+
+        log.info("AUTHORITIES = {}",
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         return ResponseEntity
                 .status(201)
                 .body(authService.registerAdmin(request));

@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/salebazar/admin/**").hasRole("ADMIN")
                         .requestMatchers("/salebazar/vendor/**").hasRole("VENDOR")
                         .requestMatchers("/salebazar/customer/**").hasRole("CUSTOMER")
-
+                        .requestMatchers("/salebazar/vendors/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 

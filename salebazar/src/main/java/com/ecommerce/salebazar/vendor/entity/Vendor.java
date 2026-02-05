@@ -1,6 +1,7 @@
 package com.ecommerce.salebazar.vendor.entity;
 
 import com.ecommerce.salebazar.user.entity.User;
+import com.ecommerce.salebazar.vendor.enums.VendorStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,7 +19,12 @@ public class Vendor {
     private String businessName;
 
     private boolean approved;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private VendorStatus vendorStatus;
 
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;

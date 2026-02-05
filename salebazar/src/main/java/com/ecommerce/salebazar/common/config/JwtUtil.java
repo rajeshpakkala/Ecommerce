@@ -6,29 +6,35 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
+import java.security.Key;
+import java.util.*;
+
 @Component
 public class JwtUtil {
 
-    private final String jwtSecret =
+    private static final String JWT_SECRET =
             "THIS_IS_A_VERY_LONG_AND_SECURE_SECRET_KEY_32_CHARS_MIN";
-    private final long jwtExpirationMs = 86400000;
+    private static final long JWT_EXPIRATION_MS = 86400000;
+
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(JWT_SECRET.getBytes());
+    }
 
     public String generateToken(User user) {
 
         List<String> roles = user.getRoles()
                 .stream()
-                .map(role -> role.getName().name())
+                .map(role -> role.getName().name()) // ROLE_ADMIN
                 .toList();
 
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()),
-                        SignatureAlgorithm.HS256)
+                .setExpiration(
+                        new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS)
+                )
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -36,22 +42,30 @@ public class JwtUtil {
         return getClaims(token).getSubject();
     }
 
+    public List<String> extractRoles(String token) {
+        return getClaims(token).get("roles", List.class);
+    }
+
     public boolean validateToken(String token) {
         try {
             getClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("JWT VALIDATION ERROR = " + e.getClass().getName());
+            System.out.println("JWT MESSAGE = " + e.getMessage());
             throw new UnauthorizedException("Invalid JWT token");
         }
     }
 
+
     private Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(jwtSecret.getBytes())
+                .setSigningKey(getSigningKey()) // 🔥 FIXED
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
+
     public Date extractExpiration(String token) {
         return getClaims(token).getExpiration();
     }

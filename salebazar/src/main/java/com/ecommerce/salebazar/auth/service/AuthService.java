@@ -10,6 +10,7 @@ import com.ecommerce.salebazar.user.entity.*;
 import com.ecommerce.salebazar.user.enums.RoleName;
 import com.ecommerce.salebazar.user.repository.*;
 import com.ecommerce.salebazar.vendor.entity.Vendor;
+import com.ecommerce.salebazar.vendor.enums.VendorStatus;
 import com.ecommerce.salebazar.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,20 +64,20 @@ public class AuthService {
     public AuthResponseDTO<RegisterResponseDTO> registerVendor(
             RegisterRequestDTO request) {
 
-        log.info("➡️ Vendor registration started");
+        log.info(" Vendor registration started");
 
         if (request == null) {
-            log.error("❌ Vendor register request is NULL");
+            log.error(" Vendor register request is NULL");
             throw new IllegalArgumentException("Request body is missing");
         }
 
-        log.info("➡️ Vendor email received: {}", request.getEmail());
+        log.info("Vendor email received: {}", request.getEmail());
 
         validateEmailNotExists(request.getEmail());
-        log.info("✅ Email not registered previously");
+        log.info("Email not registered previously");
 
         Role role = getRole(RoleName.ROLE_VENDOR);
-        log.info("✅ Vendor role fetched: {}", role.getName());
+        log.info("Vendor role fetched: {}", role.getName());
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -91,6 +92,7 @@ public class AuthService {
         Vendor vendor = Vendor.builder()
                 .businessName(request.getBusinessName())
                 .approved(false)
+                .vendorStatus(VendorStatus.PENDING)
                 .user(user)
                 .build();
 
