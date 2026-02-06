@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers("/salebazar/vendor/**").hasRole("VENDOR")
                         .requestMatchers("/salebazar/customer/**").hasRole("CUSTOMER")
                         .requestMatchers("/salebazar/vendors/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/salebazar/admin/categories/**").hasRole("ADMIN")
+                        .requestMatchers("/salebazar/categories/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
