@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class AdminDashboardController {
 
     private final DashboardService dashboardService;
-
     @GetMapping("/home")
     public ResponseEntity<AdminDashboardResponse> getDashboard() {
 
