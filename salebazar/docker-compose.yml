@@ -20,7 +20,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   app:
     image: ${ECR_IMAGE:-eclipse-temurin:17-jre-jammy}
     container_name: salebazar-app
