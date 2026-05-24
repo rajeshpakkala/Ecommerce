@@ -23,7 +23,6 @@ public class AdminDashboardController {
 
         log.info("AUTH = {}",
                 SecurityContextHolder.getContext().getAuthentication());
-
         log.info("AUTHORITIES = {}",
                 SecurityContextHolder.getContext().getAuthentication().getAuthorities());
         return ResponseEntity.ok(
