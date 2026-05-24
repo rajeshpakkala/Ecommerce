@@ -8,9 +8,9 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: salebazar        # ← matches your DB name
+      MYSQL_DATABASE: salebazar
       MYSQL_USER: myapp_user
-      MYSQL_PASSWORD: Secure@786786    # ← your actual password
+      MYSQL_PASSWORD: "Secure@786786"
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
@@ -22,16 +22,15 @@ services:
       retries: 5
 
   app:
-    build: .
+    image: ${ECR_IMAGE:-eclipse-temurin:17-jre-jammy}
     container_name: salebazar-app
     restart: always
     ports:
       - "8080:8080"
     environment:
-      # 'mysql' here is the container name above - NOT localhost!
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/salebazar
       SPRING_DATASOURCE_USERNAME: myapp_user
-      SPRING_DATASOURCE_PASSWORD: Secure@786786
+      SPRING_DATASOURCE_PASSWORD: "Secure@786786"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
     depends_on:
